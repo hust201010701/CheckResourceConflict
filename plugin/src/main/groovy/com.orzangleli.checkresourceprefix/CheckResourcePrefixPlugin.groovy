@@ -3,11 +3,19 @@ package com.orzangleli.checkresourceprefix
 import com.android.build.gradle.AppExtension
 import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.api.BaseVariantImpl
+import com.google.gson.Gson
+import com.google.gson.GsonBuilder
+import com.google.gson.JsonObject
+import com.orzangleli.checkresourceprefix.output.OutputResource
+import com.orzangleli.checkresourceprefix.output.OutputResourceDetail
+import org.apache.commons.io.FileUtils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.jdom2.Document
 import org.jdom2.Element
 import org.jdom2.input.SAXBuilder
+
+import java.nio.charset.Charset
 
 class CheckResourcePrefixPlugin implements Plugin<Project> {
 
@@ -17,7 +25,7 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
     @Override
     void apply(Project project) {
         mResourceMap = new HashMap<>();
-        mConflictResourceMap = new HashMap<>();
+        mConflictResourceMap = new HashMap<>()
 
         boolean isLibrary = project.plugins.hasPlugin("com.android.library")
         def variants = isLibrary ? ((LibraryExtension) (project.property("android"))).libraryVariants :
@@ -30,7 +38,6 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
             println("正在打印所有的任务")
             it.allTasks.forEach { task ->
                 def taskName = task.name
-                println(taskName)
                 if (taskName.contains("assemble") || taskName.contains("resguard") || taskName.contains("bundle")) {
                     if (taskName.toLowerCase().endsWith("debug")) {
                         isDebug = true
@@ -74,23 +81,84 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                     files.forEach { file ->
                         traverseResources(file)
                     }
-
+                    Gson gson = new GsonBuilder().disableHtmlEscaping().create()
                     // 打印出所有冲突的资源
                     Iterator<Map.Entry<String, List<Resource>>> iterator = mConflictResourceMap.entrySet().iterator()
+                    List<OutputResource> fileResourceList = new ArrayList<>()
+                    List<OutputResource> valueResourceList = new ArrayList<>()
+
+                    // 把 html 复制到 build 文件夹下
+                    File resultFile = copyHtmlTemplateToBuildDir(project.buildDir)
+
                     while(iterator.hasNext()) {
+                        boolean isValueType
                         Map.Entry<String, List<Resource>> entry = iterator.next()
                         List<Resource> valueList = entry.getValue()
-                        StringBuilder stringBuilder = new StringBuilder()
-                        stringBuilder.append("--------------------------------- 资源冲突 ---------------------------------").append("\n")
+
+                        OutputResource outputResource = new OutputResource()
+                        List<OutputResourceDetail> outputResourceDetailList = new ArrayList<>()
+
                         for (Resource value : valueList) {
-                            stringBuilder.append("---------------------- "  + value.belongFilePath() + " 文件中的 " + value.getUniqueId() + " ----------------------").append("\n")
+                            OutputResourceDetail outputResourceDetail = new OutputResourceDetail()
+                            def resource
+                            if (value.isValueType()) {
+                                isValueType = true
+                                resource = (ValueResource) value
+                                if (outputResource.getTitle() == null) {
+                                    outputResource.setTitle(resource.getResName())
+                                }
+                            } else {
+                                isValueType = false
+                                resource = (FileResource) value
+                                if (outputResource.getTitle() == null) {
+                                    outputResource.setTitle(resource.getFileName())
+                                }
+                            }
+                            String modulePath = resource.belongFilePath()
+                            String relatedFileName = modulePath
+                            if (modulePath.contains("/")) {
+                                relatedFileName = modulePath.substring(modulePath.lastIndexOf("/") + 1)
+                            }
+                            outputResourceDetail.setTitle(pretifyName(relatedFileName, 50) + "-> " + modulePath)
+                            outputResourceDetailList.add(outputResourceDetail)
                         }
-                        stringBuilder.append("----------------------------------------------------------------")
-                        println(stringBuilder)
+                        outputResource.setChildren(outputResourceDetailList)
+                        if (isValueType) {
+                            valueResourceList.add(outputResource)
+                        } else {
+                            fileResourceList.add(outputResource)
+                        }
                     }
+
+                    String template = FileUtils.readFileToString(resultFile, Charset.forName("UTF-8"))
+                    template = template.replaceAll("#File_Resouce_Conflicts#", gson.toJson(fileResourceList))
+                    template = template.replaceAll("#Value_Resouce_Conflicts#", gson.toJson(valueResourceList))
+                    FileUtils.write(resultFile, template, Charset.forName("UTF-8"))
+                    println("资源冲突检查完毕，请查看输出文件 $resultFile")
+
+                    // 调用浏览器打开M页FileUtils
+                    UrlUtil.browse("file://$resultFile.path")
                 }
             }
         }
+    }
+
+    String pretifyName(String content, int targetSize) {
+        int size = content.size()
+        if (size < targetSize) {
+            content += " "
+            for (int i = 0; i < targetSize - size; i++) {
+                content += "-"
+            }
+        }
+        return content
+    }
+
+    File copyHtmlTemplateToBuildDir(File buildDir) {
+        File resultHtmlFile  = new File(buildDir.path + "/" + "outputs" + "/" + "resource_check_result" + "/" + "index.html")
+        InputStream inputStream = this.getClass().getResourceAsStream("/templates/check_resource_conflict_result.html")
+        FileUtils.copyInputStreamToFile(inputStream, resultHtmlFile)
+        return resultHtmlFile
     }
 
     void traverseResources(File file) {
@@ -112,10 +180,9 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
     void recordResource(Resource resource) {
         // 如果包含了，那么把相同资源方法一个Map中
         def uniqueId = resource.getUniqueId()
-        println(uniqueId)
         if (mResourceMap.containsKey(uniqueId)) {
             Resource oldOne = mResourceMap.get(uniqueId)
-            if (oldOne != resource) {
+            if (resource != oldOne) {
                 List<Resource> resources = mConflictResourceMap.get(uniqueId)
                 if (resources == null) {
                     resources = new ArrayList<Resource>()

@@ -21,6 +21,13 @@ sourceSets {
     }
 }
 
+//将src文件夹中的资源文件同时打包
+processResources {
+    from('src/main/groovy') {
+        include '**/*.html'
+    }
+}
+
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
 

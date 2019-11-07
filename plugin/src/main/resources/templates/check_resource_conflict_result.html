@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>资源冲突关系树</title>
+    <link rel="stylesheet" type="text/css" href="http://unpkg.com/iview/dist/styles/iview.css">
+    <script type="text/javascript" src="http://vuejs.org/js/vue.min.js"></script>
+    <script type="text/javascript" src="http://unpkg.com/iview/dist/iview.min.js"></script>
+</head>
+<body>
+<div id="app">
+    <h1 style="margin-left: 20px;">资源冲突&nbsp;关系树</h1>
+    <Tree :data="baseData"></Tree>
+</div>
+<script>
+    new Vue({
+        el: '#app',
+        data: {
+            baseData: [{
+                expand: true,
+                title: '冲突的资源',
+                children: [{
+                    title: 'File 资源',
+                    expand: true,
+                    children: #File_Resouce_Conflicts#
+                }, {
+                    title: 'Value 资源',
+                    expand: true,
+                    children: #Value_Resouce_Conflicts#
+                }]
+            }]
+        },
+    })
+  </script>
+</body>
+</html>
