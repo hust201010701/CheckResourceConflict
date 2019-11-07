@@ -31,4 +31,6 @@ public abstract class Resource {
     public abstract String getUniqueId();
     
     public abstract String belongFilePath();
+    
+    public abstract boolean compare(Resource obj);
 }

@@ -53,10 +53,17 @@ public class FileResource extends Resource {
         return path;
     }
     
-    @Override public boolean equals(Object obj) {
+    @Override
+    public boolean compare(Resource obj) {
         if (obj instanceof FileResource) {
             FileResource target = (FileResource) obj;
-            return this.getUniqueId().equals(target.getUniqueId()) && this.getMd5().equals(target.getMd5());
+            if (this.getUniqueId().equals(target.getUniqueId())) {
+                if (this.getMd5() == null && target.getMd5() == null) {
+                    return true;
+                } else {
+                    return this.getMd5().equals(target.getMd5());
+                }
+            }
         }
         return false;
     }

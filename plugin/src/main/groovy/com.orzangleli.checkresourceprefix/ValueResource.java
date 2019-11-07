@@ -53,7 +53,8 @@ public class ValueResource extends Resource {
         return filePath;
     }
     
-    @Override public boolean equals(Object obj) {
+    @Override
+    public boolean compare(Resource obj) {
         if (obj instanceof ValueResource) {
             ValueResource target = (ValueResource) obj;
             return this.getUniqueId().equals(target.getUniqueId()) && this.getResValue().equals(target.getResValue());

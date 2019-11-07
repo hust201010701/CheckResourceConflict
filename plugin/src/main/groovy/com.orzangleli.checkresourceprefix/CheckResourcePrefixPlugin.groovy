@@ -134,6 +134,7 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                     template = template.replaceAll("#File_Resouce_Conflicts#", gson.toJson(fileResourceList))
                     template = template.replaceAll("#Value_Resouce_Conflicts#", gson.toJson(valueResourceList))
                     FileUtils.write(resultFile, template, Charset.forName("UTF-8"))
+
                     println("资源冲突检查完毕，请查看输出文件 $resultFile")
 
                     // 调用浏览器打开M页FileUtils
@@ -182,7 +183,8 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
         def uniqueId = resource.getUniqueId()
         if (mResourceMap.containsKey(uniqueId)) {
             Resource oldOne = mResourceMap.get(uniqueId)
-            if (resource != oldOne) {
+
+            if (oldOne != null && !oldOne.compare(resource)) {
                 List<Resource> resources = mConflictResourceMap.get(uniqueId)
                 if (resources == null) {
                     resources = new ArrayList<Resource>()
