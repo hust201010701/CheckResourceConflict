@@ -20,8 +20,10 @@ android {
 }
 
 checkResourceConfig {
-    autoPreviewResult false
+    autoPreviewResult true
+//    autoPreviewResult false
 //    outputDir "./out"
+    whiteListFile "../checkResource/whitelist.lxc"
 }
 
 configurations.all {

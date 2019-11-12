@@ -33,34 +33,33 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
         CheckResourceConfig checkResourceConfig = project.checkResourceConfig
 
         boolean isLibrary = project.plugins.hasPlugin("com.android.library")
-        def variants = isLibrary ? ((LibraryExtension) (project.property("android"))).libraryVariants :
+        def variants = isLibrary ?
+            ((LibraryExtension) (project.property("android"))).libraryVariants :
             ((AppExtension) (project.property("android"))).applicationVariants
 
         def isDebug = false
         def isContainsAssembleTask = false
 
-        project.gradle.taskGraph.whenReady {
-            println("正在打印所有的任务")
-            it.allTasks.forEach { task ->
-                def taskName = task.name
-                if (taskName.contains("assemble") || taskName.contains("resguard") || taskName.contains("bundle")) {
-                    if (taskName.toLowerCase().endsWith("debug")) {
-                        isDebug = true
-                    }
-                    isContainsAssembleTask = true
-                    // break foreach
-                    return true
-                }
-            }
-        }
-
+        //        project.gradle.taskGraph.whenReady {
+        //            println("正在打印所有的任务")
+        //            it.allTasks.forEach { task ->
+        //                def taskName = task.name
+        //                if (taskName.contains("assemble") || taskName.contains("resguard") || taskName.contains("bundle")) {
+        //                    if (taskName.toLowerCase().endsWith("debug")) {
+        //                        isDebug = true
+        //                    }
+        //                    isContainsAssembleTask = true
+        //                    // break foreach
+        //                    return true
+        //                }
+        //            }
+        //        }
 
         project.afterEvaluate {
-
             variants.forEach { variant ->
                 variant as BaseVariantImpl
 
-                def thisTaskName = "aaa${variant.name.capitalize()}"
+                def thisTaskName = "checkResource${variant.name.capitalize()}"
                 println("thisTaskName = " + thisTaskName)
                 def thisTask = project.task(thisTaskName)
                 thisTask.group = "check"
@@ -69,71 +68,92 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
 
                     def files = variant.allRawAndroidResources.files
 
-                    files.forEach { file ->
-                        traverseResources(file)
+                    files.forEach { file -> traverseResources(file)
                     }
                     Gson gson = new GsonBuilder().disableHtmlEscaping().create()
                     // 打印出所有冲突的资源
-                    Iterator<Map.Entry<String, List<Resource>>> iterator = mConflictResourceMap.entrySet().iterator()
+                    Iterator<Map.Entry<String, List<Resource>>> iterator = mConflictResourceMap.
+                        entrySet().
+                        iterator()
                     List<OutputResource> fileResourceList = new ArrayList<>()
                     List<OutputResource> valueResourceList = new ArrayList<>()
 
+                    List<String> whiteUniqueIdList = new ArrayList<>()
+                    if (checkResourceConfig.whiteListFile == null ||
+                        checkResourceConfig.whiteListFile ==
+                        "") {
+                        whiteUniqueIdList.clear()
+                    } else {
+                        whiteUniqueIdList = getWhiteUniqueIdFromFile(checkResourceConfig.whiteListFile)
+                    }
+
                     File resultFileDir
                     // 把 html 复制到 build 文件夹下
-                    if (checkResourceConfig.outputDir == null || checkResourceConfig.outputDir == "") {
+                    if (checkResourceConfig.outputDir == null ||
+                        checkResourceConfig.outputDir ==
+                        "") {
                         resultFileDir = project.buildDir
                     } else {
                         resultFileDir = new File(checkResourceConfig.outputDir)
                     }
                     File resultFile = copyHtmlTemplateToBuildDir(resultFileDir)
 
-                    while(iterator.hasNext()) {
+                    while (iterator.hasNext()) {
                         boolean isValueType
                         Map.Entry<String, List<Resource>> entry = iterator.next()
                         List<Resource> valueList = entry.getValue()
 
                         OutputResource outputResource = new OutputResource()
                         List<OutputResourceDetail> outputResourceDetailList = new ArrayList<>()
-
+                        String uniqueId = null
                         for (Resource value : valueList) {
+                            uniqueId = value.getUniqueId()
                             OutputResourceDetail outputResourceDetail = new OutputResourceDetail()
                             def resource
                             if (value.isValueType()) {
                                 isValueType = true
                                 resource = (ValueResource) value
                                 if (outputResource.getTitle() == null) {
-                                    outputResource.setTitle(resource.getResName())
+                                    outputResource.setTitle(resource.getResName() + " (数量：" + valueList.size() + ")")
                                 }
                             } else {
                                 isValueType = false
                                 resource = (FileResource) value
                                 if (outputResource.getTitle() == null) {
-                                    outputResource.setTitle(resource.getFileName())
+                                    outputResource.setTitle(resource.getFileName() + " (数量：" + valueList.size() + ")")
                                 }
                             }
                             String modulePath = resource.belongFilePath()
                             String relatedFileName = modulePath
                             if (modulePath.contains("/")) {
-                                relatedFileName = modulePath.substring(modulePath.lastIndexOf("/") + 1)
+                                relatedFileName =
+                                    modulePath.substring(modulePath.lastIndexOf("/") + 1)
                             }
                             if (isValueType) {
                                 ValueResource valueResource = (ValueResource) value
-                                relatedFileName = relatedFileName + "(Line: " + valueResource.getLine() + ")"
+                                relatedFileName =
+                                    relatedFileName + "(Line: " + valueResource.getLine() + ")"
                             }
-                            outputResourceDetail.setTitle(pretifyName(relatedFileName, 50) + "-> " + modulePath)
+                            outputResourceDetail.setTitle(
+                                pretifyName(relatedFileName, 50) + "-> " + modulePath)
                             outputResourceDetailList.add(outputResourceDetail)
                         }
                         outputResource.setChildren(outputResourceDetailList)
-                        if (isValueType) {
-                            valueResourceList.add(outputResource)
-                        } else {
-                            fileResourceList.add(outputResource)
+                        if (!whiteUniqueIdList.contains(uniqueId)) {
+                            if (isValueType) {
+                                valueResourceList.add(outputResource)
+                            } else {
+                                fileResourceList.add(outputResource)
+                            }
                         }
                     }
 
-                    String template = FileUtils.readFileToString(resultFile, Charset.forName("UTF-8"))
-                    template = template.replaceAll("#File_Resouce_Conflicts#", gson.toJson(fileResourceList))
-                    template = template.replaceAll("#Value_Resouce_Conflicts#", gson.toJson(valueResourceList))
+                    String template = FileUtils.readFileToString(resultFile,
+                        Charset.forName("UTF-8"))
+                    template = template.replaceAll("#File_Resouce_Conflicts#",
+                        gson.toJson(fileResourceList))
+                    template = template.replaceAll("#Value_Resouce_Conflicts#",
+                        gson.toJson(valueResourceList))
                     FileUtils.write(resultFile, template, Charset.forName("UTF-8"))
 
                     println("资源冲突检查完毕，请查看输出文件 $resultFile")
@@ -145,6 +165,23 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                 }
             }
         }
+    }
+
+    List<String> getWhiteUniqueIdFromFile(String path) {
+        List<String> readLines = null
+        File file = new File(path)
+        if (file.exists()) {
+            readLines = FileUtils.readLines(file, "UTF-8")
+        }
+        List<String> result = new ArrayList<>()
+        if (readLines != null) {
+            for (String line : readLines) {
+                if (line != null && line.trim() != "" && !line.startsWith("#")) {
+                    result.add(line.trim())
+                }
+            }
+        }
+        return result
     }
 
     String pretifyName(String content, int targetSize) {
@@ -159,8 +196,10 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
     }
 
     File copyHtmlTemplateToBuildDir(File buildDir) {
-        File resultHtmlFile  = new File(buildDir.path + "/" + "outputs" + "/" + "resource_check_result" + "/" + "index.html")
-        InputStream inputStream = this.getClass().getResourceAsStream("/templates/check_resource_conflict_result.html")
+        File resultHtmlFile = new File(
+            buildDir.path + "/" + "outputs" + "/" + "resource_check_result" + "/" + "index.html")
+        InputStream inputStream = this.getClass().
+            getResourceAsStream("/templates/check_resource_conflict_result.html")
         FileUtils.copyInputStreamToFile(inputStream, resultHtmlFile)
         return resultHtmlFile
     }
@@ -224,13 +263,12 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                     resource.setLastDirectory(lastDirectory)
                     resource.setFilePath(filePath)
                     if (item instanceof LocatedElement) {
-                        resource.setLine(((LocatedElement)item).getLine())
+                        resource.setLine(((LocatedElement) item).getLine())
                     }
                     recordResource(resource)
                 }
             }
         }
-
     }
 
     boolean isInWhileList(Element element) {
@@ -239,8 +277,6 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
         }
         return false
     }
-
-
 
     void findAndRecordFileResource(File file) {
         FileResource resource = new FileResource()
