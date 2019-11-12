@@ -16,7 +16,7 @@ import java.util.List;
  */
 public class OutputResource {
     private String title;
-    private boolean expand = true;
+    private boolean expand = false;
     
     private List<OutputResourceDetail> children;
     
