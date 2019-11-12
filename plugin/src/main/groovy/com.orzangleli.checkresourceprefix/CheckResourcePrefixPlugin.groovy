@@ -10,6 +10,8 @@ import com.google.gson.JsonObject
 import com.google.gson.JsonParser
 import com.orzangleli.checkresourceprefix.output.OutputResource
 import com.orzangleli.checkresourceprefix.output.OutputResourceDetail
+import com.sun.mail.smtp.SMTPTransport
+import com.sun.xml.internal.messaging.saaj.packaging.mime.MessagingException
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
@@ -19,7 +21,18 @@ import org.jdom2.Element
 import org.jdom2.input.SAXBuilder
 import org.jdom2.located.LocatedElement
 import org.jdom2.located.LocatedJDOMFactory
+import sun.security.pkcs11.Session
 
+import javax.activation.DataHandler
+import javax.mail.Address
+import javax.mail.Message
+import javax.mail.Multipart
+import javax.mail.Transport
+import javax.mail.internet.InternetAddress
+import javax.mail.internet.MimeBodyPart
+import javax.mail.internet.MimeMessage
+import javax.mail.internet.MimeMultipart
+import javax.mail.util.ByteArrayDataSource
 import java.nio.charset.Charset
 
 class CheckResourcePrefixPlugin implements Plugin<Project> {
@@ -170,9 +183,64 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                         // 调用浏览器打开M页FileUtils
                         UrlUtil.browse("file://$resultFile.path")
                     }
+
+                    if (checkResourceConfig.needSendEmail) {
+                        sendEmail(resultFile, checkResourceConfig.emailList)
+                    }
                 }
             }
         }
+    }
+
+
+
+    void sendEmail(File resultFile, String[] emailList) {
+        if (emailList == null || emailList.size() == 0) {
+            return
+        }
+        Properties props = new Properties();
+        // 开启debug调试
+        props.setProperty("mail.debug", "true");
+        // 发送服务器需要身份验证
+        props.setProperty("mail.smtp.auth", "true");
+        // 设置邮件服务器主机名
+        props.setProperty("mail.host", "smtp.exmail.qq.com");
+        // 发送邮件协议名称
+        props.setProperty("mail.transport.protocol", "smtp");
+
+        // 设置环境信息
+        javax.mail.Session session = javax.mail.Session.getInstance(props);
+
+        // 创建邮件对象
+        Message msg = new MimeMessage(session)
+        msg.setSubject("资源冲突检测结果")
+        // 添加附件
+        MimeBodyPart title = new MimeBodyPart()
+        title.setText("资源冲突检测结果，请下载附件预览")
+        MimeBodyPart html = new MimeBodyPart()
+        // attach the file to the message
+        html.attachFile(resultFile)
+        Multipart mp = new MimeMultipart()
+        mp.addBodyPart(title)
+        mp.addBodyPart(html)
+        msg.setContent(mp)
+        // 设置发件人（账号）
+        msg.setFrom(new InternetAddress("lixiancheng@zhuanzhuan.com"))
+
+        Transport transport = session.getTransport();
+        // 连接邮件服务器(账号，授权码)
+        transport.connect("lixiancheng@zhuanzhuan.com", "3DcqVAUgZ7tcBqjY")
+        // 发送邮件
+        Address[] addresses = new Address[emailList.size()]
+        int i = 0
+        for (String email : emailList) {
+            addresses[i] = new InternetAddress(email)
+            i++
+        }
+        transport.sendMessage(msg, addresses);
+        // 关闭连接
+        transport.close();
+        println("邮件发送成功")
     }
 
     List<String> getWhiteUniqueIdFromFile(String path) {

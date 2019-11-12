@@ -17,6 +17,9 @@ public class CheckResourceConfig {
     String outputDir;
     String whiteListFile;
     
+    boolean needSendEmail;
+    String[] emailList;
+    
     void autoPreviewResult(boolean autoPreviewResult) {
         this.autoPreviewResult = autoPreviewResult;
     }
@@ -27,5 +30,13 @@ public class CheckResourceConfig {
     
     void whiteListFile(String whiteListFile) {
         this.whiteListFile = whiteListFile;
+    }
+    
+    void needSendEmail(boolean needSendEmail) {
+        this.needSendEmail = needSendEmail;
+    }
+    
+    void emailList(String[] emailList) {
+        this.emailList = emailList;
     }
 }
