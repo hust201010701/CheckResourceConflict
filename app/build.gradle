@@ -23,7 +23,7 @@ checkResourceConfig {
     autoPreviewResult true
 //    autoPreviewResult false
 //    outputDir "./out"
-    whiteListFile "../checkResource/whitelist.lxc"
+//    whiteListFile "../checkResource/whitelist.lxc"
 }
 
 configurations.all {

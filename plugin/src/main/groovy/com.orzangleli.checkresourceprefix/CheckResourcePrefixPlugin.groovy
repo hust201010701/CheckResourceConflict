@@ -63,8 +63,12 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                 println("thisTaskName = " + thisTaskName)
                 def thisTask = project.task(thisTaskName)
                 thisTask.group = "check"
+                def compileReleaseJavaWithJavac = project.tasks.findByName("compile${variant.name.capitalize()}JavaWithJavac")
+                compileReleaseJavaWithJavac.dependsOn(thisTask)
+
                 thisTask.doLast {
-                    println("开始执行这个任务：" + thisTaskName)
+                    long startTime = System.currentTimeMillis()
+                    println("开始执行 CheckResource 任务：" + thisTaskName)
 
                     def files = variant.allRawAndroidResources.files
 
@@ -96,7 +100,7 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                     } else {
                         resultFileDir = new File(checkResourceConfig.outputDir)
                     }
-                    File resultFile = copyHtmlTemplateToBuildDir(resultFileDir)
+                    File resultFile = copyHtmlTemplateToBuildDir(resultFileDir, variant.name)
 
                     while (iterator.hasNext()) {
                         boolean isValueType
@@ -156,7 +160,9 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                         gson.toJson(valueResourceList))
                     FileUtils.write(resultFile, template, Charset.forName("UTF-8"))
 
-                    println("资源冲突检查完毕，请查看输出文件 $resultFile")
+                    long cost = System.currentTimeMillis() - startTime
+                    println("资源冲突检查完毕，耗时 " + cost + " ms，请查看输出文件 $resultFile")
+                    println("checkResourceConfig.autoPreviewResult 配置为 " + checkResourceConfig.autoPreviewResult)
 
                     if (checkResourceConfig.autoPreviewResult) {
                         // 调用浏览器打开M页FileUtils
@@ -195,9 +201,9 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
         return content
     }
 
-    File copyHtmlTemplateToBuildDir(File buildDir) {
+    File copyHtmlTemplateToBuildDir(File buildDir, String variantName) {
         File resultHtmlFile = new File(
-            buildDir.path + "/" + "outputs" + "/" + "resource_check_result" + "/" + "index.html")
+            buildDir.path + "/" + "outputs" + "/" + "resource_check_result" + "/" + variantName + "_index.html")
         InputStream inputStream = this.getClass().
             getResourceAsStream("/templates/check_resource_conflict_result.html")
         FileUtils.copyInputStreamToFile(inputStream, resultHtmlFile)
