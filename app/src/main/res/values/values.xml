@@ -1,4 +1,16 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <color name="error_color_material_dark2">#FF5</color>
+    <color name="error_color_material_dark22">#FF5</color>
+    <color name="error_color_material_dark233">#FF5</color>
+    <declare-styleable name="CoordinatorLayout">
+        <!-- A reference to an array of integers representing the
+             locations of horizontal keylines in dp from the starting edge.
+             Child views can refer to these keylines for alignment using
+             layout_keyline="index" where index is a 0-based index into
+             this array. -->
+        <attr format="reference" name="keylines"/>
+        <!-- Drawable to display behind the status bar when the view is set to draw behind it. -->
+        <attr format="color|reference" name="statusBarBackground"/>
+    </declare-styleable>
 </resources>

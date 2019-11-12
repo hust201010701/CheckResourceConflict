@@ -5,12 +5,15 @@ import com.android.build.gradle.LibraryExtension
 import com.android.build.gradle.internal.api.BaseVariantImpl
 import com.google.gson.Gson
 import com.google.gson.GsonBuilder
+import com.google.gson.JsonArray
 import com.google.gson.JsonObject
+import com.google.gson.JsonParser
 import com.orzangleli.checkresourceprefix.output.OutputResource
 import com.orzangleli.checkresourceprefix.output.OutputResourceDetail
 import org.apache.commons.io.FileUtils
 import org.gradle.api.Plugin
 import org.gradle.api.Project
+import org.jdom2.Attribute
 import org.jdom2.Document
 import org.jdom2.Element
 import org.jdom2.input.SAXBuilder
@@ -23,11 +26,13 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
 
     Map<String, Resource> mResourceMap
     Map<String, List<Resource>> mConflictResourceMap
+    Gson gson
 
     @Override
     void apply(Project project) {
         mResourceMap = new HashMap<>();
         mConflictResourceMap = new HashMap<>()
+        gson = new GsonBuilder().disableHtmlEscaping().create()
 
         project.extensions.create('checkResourceConfig', CheckResourceConfig)
         CheckResourceConfig checkResourceConfig = project.checkResourceConfig
@@ -60,7 +65,6 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                 variant as BaseVariantImpl
 
                 def thisTaskName = "checkResource${variant.name.capitalize()}"
-                println("thisTaskName = " + thisTaskName)
                 def thisTask = project.task(thisTaskName)
                 thisTask.group = "check"
                 def compileReleaseJavaWithJavac = project.tasks.findByName("compile${variant.name.capitalize()}JavaWithJavac")
@@ -74,7 +78,6 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
 
                     files.forEach { file -> traverseResources(file)
                     }
-                    Gson gson = new GsonBuilder().disableHtmlEscaping().create()
                     // 打印出所有冲突的资源
                     Iterator<Map.Entry<String, List<Resource>>> iterator = mConflictResourceMap.
                         entrySet().
@@ -162,7 +165,6 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
 
                     long cost = System.currentTimeMillis() - startTime
                     println("资源冲突检查完毕，耗时 " + cost + " ms，请查看输出文件 $resultFile")
-                    println("checkResourceConfig.autoPreviewResult 配置为 " + checkResourceConfig.autoPreviewResult)
 
                     if (checkResourceConfig.autoPreviewResult) {
                         // 调用浏览器打开M页FileUtils
@@ -259,29 +261,45 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
         if (element != null) {
             List<Element> children = element.getChildren()
             for (Element item : children) {
-                if (isInWhileList(item)) {
-                    String resName = item.getAttributeValue("name")
-                    String resValue = item.getValue()
-
-                    ValueResource resource = new ValueResource()
-                    resource.setResName(resName)
-                    resource.setResValue(resValue)
-                    resource.setLastDirectory(lastDirectory)
-                    resource.setFilePath(filePath)
-                    if (item instanceof LocatedElement) {
-                        resource.setLine(((LocatedElement) item).getLine())
-                    }
-                    recordResource(resource)
+                String resName = item.getAttributeValue("name")
+                String resValue
+                if (item.children == null || item.children.size() == 0) {
+                    resValue = item.getValue()
+                } else {
+                    resValue = getValueFromElement(item.children)
                 }
+
+                ValueResource resource = new ValueResource()
+                resource.setResName(resName)
+                resource.setResValue(resValue)
+                resource.setLastDirectory(lastDirectory)
+                resource.setFilePath(filePath)
+                if (item instanceof LocatedElement) {
+                    resource.setLine(((LocatedElement) item).getLine())
+                }
+                recordResource(resource)
             }
         }
     }
 
-    boolean isInWhileList(Element element) {
-        if (element.name == "color" || element.name == "string") {
-            return true
+    String getValueFromElement(List<Element> elementList) {
+        JsonArray jsonArray = new JsonArray()
+        for (Element element : elementList) {
+            JsonObject jsonObject = new JsonObject()
+            jsonObject.addProperty("_name", element.getName())
+            List<Attribute> attributes = element.getAttributes()
+            JsonArray attributesJsonArray = new JsonArray()
+            for (Attribute attribute : attributes) {
+                JsonObject attributeObj = new JsonObject()
+                attributeObj.addProperty("name", attribute.getName())
+                attributeObj.addProperty("value", attribute.getValue())
+                attributesJsonArray.add(attributeObj)
+            }
+            jsonObject.add("_attributes", attributesJsonArray)
+            jsonObject.addProperty("_value", element.getValue())
+            jsonArray.add(jsonObject)
         }
-        return false
+        return jsonArray.toString()
     }
 
     void findAndRecordFileResource(File file) {
