@@ -121,13 +121,13 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                                 isValueType = true
                                 resource = (ValueResource) value
                                 if (outputResource.getTitle() == null) {
-                                    outputResource.setTitle(resource.getResName() + " (数量：" + valueList.size() + ")")
+                                    outputResource.setTitle(resource.getResName() + " (数量：" + valueList.size() + ")，(id = " + uniqueId + ")")
                                 }
                             } else {
                                 isValueType = false
                                 resource = (FileResource) value
                                 if (outputResource.getTitle() == null) {
-                                    outputResource.setTitle(resource.getFileName() + " (数量：" + valueList.size() + ")")
+                                    outputResource.setTitle(resource.getFileName() + " (数量：" + valueList.size() + ")，(id = " + uniqueId + ")")
                                 }
                             }
                             String modulePath = resource.belongFilePath()
