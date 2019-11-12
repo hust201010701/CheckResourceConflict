@@ -13,25 +13,24 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.jdom2.Document
 import org.jdom2.Element
-import org.jdom2.filter.Filter
 import org.jdom2.input.SAXBuilder
 import org.jdom2.located.LocatedElement
 import org.jdom2.located.LocatedJDOMFactory
-import org.jdom2.xpath.XPathBuilder
-import org.jdom2.xpath.XPathExpression
-import org.jdom2.xpath.XPathFactory
 
 import java.nio.charset.Charset
 
 class CheckResourcePrefixPlugin implements Plugin<Project> {
 
     Map<String, Resource> mResourceMap
-    Map<String, List<Resource>> mConflictResourceMap;
+    Map<String, List<Resource>> mConflictResourceMap
 
     @Override
     void apply(Project project) {
         mResourceMap = new HashMap<>();
         mConflictResourceMap = new HashMap<>()
+
+        project.extensions.create('checkResourceConfig', CheckResourceConfig)
+        CheckResourceConfig checkResourceConfig = project.checkResourceConfig
 
         boolean isLibrary = project.plugins.hasPlugin("com.android.library")
         def variants = isLibrary ? ((LibraryExtension) (project.property("android"))).libraryVariants :
@@ -61,7 +60,6 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
             variants.forEach { variant ->
                 variant as BaseVariantImpl
 
-                def mergeResourcesTask = variant.mergeResourcesProvider.get()
                 def thisTaskName = "aaa${variant.name.capitalize()}"
                 println("thisTaskName = " + thisTaskName)
                 def thisTask = project.task(thisTaskName)
@@ -80,8 +78,14 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                     List<OutputResource> fileResourceList = new ArrayList<>()
                     List<OutputResource> valueResourceList = new ArrayList<>()
 
+                    File resultFileDir
                     // 把 html 复制到 build 文件夹下
-                    File resultFile = copyHtmlTemplateToBuildDir(project.buildDir)
+                    if (checkResourceConfig.outputDir == null || checkResourceConfig.outputDir == "") {
+                        resultFileDir = project.buildDir
+                    } else {
+                        resultFileDir = new File(checkResourceConfig.outputDir)
+                    }
+                    File resultFile = copyHtmlTemplateToBuildDir(resultFileDir)
 
                     while(iterator.hasNext()) {
                         boolean isValueType
@@ -134,8 +138,10 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
 
                     println("资源冲突检查完毕，请查看输出文件 $resultFile")
 
-                    // 调用浏览器打开M页FileUtils
-                    UrlUtil.browse("file://$resultFile.path")
+                    if (checkResourceConfig.autoPreviewResult) {
+                        // 调用浏览器打开M页FileUtils
+                        UrlUtil.browse("file://$resultFile.path")
+                    }
                 }
             }
         }

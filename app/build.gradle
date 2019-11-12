@@ -19,6 +19,11 @@ android {
     }
 }
 
+checkResourceConfig {
+    autoPreviewResult false
+//    outputDir "./out"
+}
+
 configurations.all {
     resolutionStrategy.cacheChangingModulesFor 0, 'seconds'
 }
