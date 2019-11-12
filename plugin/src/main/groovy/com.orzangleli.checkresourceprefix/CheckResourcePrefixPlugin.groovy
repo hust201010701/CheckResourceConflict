@@ -13,7 +13,13 @@ import org.gradle.api.Plugin
 import org.gradle.api.Project
 import org.jdom2.Document
 import org.jdom2.Element
+import org.jdom2.filter.Filter
 import org.jdom2.input.SAXBuilder
+import org.jdom2.located.LocatedElement
+import org.jdom2.located.LocatedJDOMFactory
+import org.jdom2.xpath.XPathBuilder
+import org.jdom2.xpath.XPathExpression
+import org.jdom2.xpath.XPathFactory
 
 import java.nio.charset.Charset
 
@@ -62,19 +68,6 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                 thisTask.group = "check"
                 thisTask.doLast {
                     println("开始执行这个任务：" + thisTaskName)
-                    //        if (isDebug) {
-                    //            println()
-                    //            println("This project is building in debug mode, so we won't check resources prefix.")
-                    //            println()
-                    //            return true
-                    //        }
-//
-//                    if (!isContainsAssembleTask) {
-//                        println()
-//                        println("The building doesn't contain assemble task, so we cancel resource prefix.")
-//                        println()
-//                        return true
-//                    }
 
                     def files = variant.allRawAndroidResources.files
 
@@ -118,6 +111,10 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                             String relatedFileName = modulePath
                             if (modulePath.contains("/")) {
                                 relatedFileName = modulePath.substring(modulePath.lastIndexOf("/") + 1)
+                            }
+                            if (isValueType) {
+                                ValueResource valueResource = (ValueResource) value
+                                relatedFileName = relatedFileName + "(Line: " + valueResource.getLine() + ")"
                             }
                             outputResourceDetail.setTitle(pretifyName(relatedFileName, 50) + "-> " + modulePath)
                             outputResourceDetailList.add(outputResourceDetail)
@@ -202,10 +199,12 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
         String filePath = file.path
         // 构造器
         SAXBuilder saxBuilder = new SAXBuilder()
+        saxBuilder.setJDOMFactory(new LocatedJDOMFactory())
         // 获取文档
         Document document = saxBuilder.build(file)
         // 得到根元素: resources
         Element element = document.getRootElement()
+
         if (element != null) {
             List<Element> children = element.getChildren()
             for (Element item : children) {
@@ -218,6 +217,9 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                     resource.setResValue(resValue)
                     resource.setLastDirectory(lastDirectory)
                     resource.setFilePath(filePath)
+                    if (item instanceof LocatedElement) {
+                        resource.setLine(((LocatedElement)item).getLine())
+                    }
                     recordResource(resource)
                 }
             }

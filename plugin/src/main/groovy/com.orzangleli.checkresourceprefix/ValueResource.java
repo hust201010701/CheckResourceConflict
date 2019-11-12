@@ -20,6 +20,7 @@ public class ValueResource extends Resource {
     private String resName;
     private String resValue;
     private String filePath;
+    private int line;
     
     public String getFilePath() {
         return filePath;
@@ -51,6 +52,14 @@ public class ValueResource extends Resource {
     
     @Override public String belongFilePath() {
         return filePath;
+    }
+    
+    public int getLine() {
+        return line;
+    }
+    
+    public void setLine(int line) {
+        this.line = line;
     }
     
     @Override
