@@ -225,11 +225,12 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
         mp.addBodyPart(html)
         msg.setContent(mp)
         // 设置发件人（账号）
-        msg.setFrom(new InternetAddress("lixiancheng@zhuanzhuan.com"))
+        // todo 收件人
+        msg.setFrom(new InternetAddress(""))
 
         Transport transport = session.getTransport();
         // 连接邮件服务器(账号，授权码)
-        transport.connect("lixiancheng@zhuanzhuan.com", "3DcqVAUgZ7tcBqjY")
+        transport.connect("", "")
         // 发送邮件
         Address[] addresses = new Address[emailList.size()]
         int i = 0
