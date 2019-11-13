@@ -16,9 +16,7 @@ public class CheckResourceConfig {
     boolean autoPreviewResult;
     String outputDir;
     String whiteListFile;
-    
-    boolean needSendEmail;
-    String[] emailList;
+    EmailConfig emailConfig;
     
     void autoPreviewResult(boolean autoPreviewResult) {
         this.autoPreviewResult = autoPreviewResult;
@@ -32,11 +30,9 @@ public class CheckResourceConfig {
         this.whiteListFile = whiteListFile;
     }
     
-    void needSendEmail(boolean needSendEmail) {
-        this.needSendEmail = needSendEmail;
+    void emailConfig(EmailConfig emailConfig) {
+        this.emailConfig = emailConfig;
     }
     
-    void emailList(String[] emailList) {
-        this.emailList = emailList;
-    }
 }
+

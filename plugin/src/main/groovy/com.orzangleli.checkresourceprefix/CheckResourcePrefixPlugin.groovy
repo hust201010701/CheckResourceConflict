@@ -48,7 +48,9 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
         gson = new GsonBuilder().disableHtmlEscaping().create()
 
         project.extensions.create('checkResourceConfig', CheckResourceConfig)
+        project.extensions.create('emailConfig', EmailConfig)
         CheckResourceConfig checkResourceConfig = project.checkResourceConfig
+        EmailConfig emailConfig = project.emailConfig
 
         boolean isLibrary = project.plugins.hasPlugin("com.android.library")
         def variants = isLibrary ?
@@ -184,8 +186,8 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                         UrlUtil.browse("file://$resultFile.path")
                     }
 
-                    if (checkResourceConfig.needSendEmail) {
-                        sendEmail(resultFile, checkResourceConfig.emailList)
+                    if (emailConfig.needSendEmail) {
+                        sendEmail(emailConfig, project.rootDir.name, resultFile, emailConfig.toEmailList)
                     }
                 }
             }
@@ -194,26 +196,26 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
 
 
 
-    void sendEmail(File resultFile, String[] emailList) {
+    void sendEmail(EmailConfig emailConfig, String projectName, File resultFile, String[] emailList) {
         if (emailList == null || emailList.size() == 0) {
             return
         }
         Properties props = new Properties();
         // 开启debug调试
-        props.setProperty("mail.debug", "true");
+        props.setProperty("mail.debug", "false")
         // 发送服务器需要身份验证
-        props.setProperty("mail.smtp.auth", "true");
+        props.setProperty("mail.smtp.auth", "true")
         // 设置邮件服务器主机名
-        props.setProperty("mail.host", "smtp.exmail.qq.com");
+        props.setProperty("mail.host", emailConfig.host)
         // 发送邮件协议名称
-        props.setProperty("mail.transport.protocol", "smtp");
+        props.setProperty("mail.transport.protocol", "smtp")
 
         // 设置环境信息
-        javax.mail.Session session = javax.mail.Session.getInstance(props);
+        javax.mail.Session session = javax.mail.Session.getInstance(props)
 
         // 创建邮件对象
         Message msg = new MimeMessage(session)
-        msg.setSubject("资源冲突检测结果")
+        msg.setSubject(projectName + " 资源冲突检测结果")
         // 添加附件
         MimeBodyPart title = new MimeBodyPart()
         title.setText("资源冲突检测结果，请下载附件预览")
@@ -225,12 +227,11 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
         mp.addBodyPart(html)
         msg.setContent(mp)
         // 设置发件人（账号）
-        // todo 收件人
-        msg.setFrom(new InternetAddress(""))
+        msg.setFrom(new InternetAddress(emailConfig.fromEmail))
 
         Transport transport = session.getTransport();
         // 连接邮件服务器(账号，授权码)
-        transport.connect("", "")
+        transport.connect(emailConfig.account, emailConfig.authorizationCode)
         // 发送邮件
         Address[] addresses = new Address[emailList.size()]
         int i = 0
