@@ -25,7 +25,7 @@ checkResourceConfig {
 //    outputDir "./out"
 //    whiteListFile "../checkResource/whitelist.lxc"
     needSendEmail true
-    emailList ("lixiancheng@zhuanzhuan.com")
+    emailList ()
 }
 
 configurations.all {
