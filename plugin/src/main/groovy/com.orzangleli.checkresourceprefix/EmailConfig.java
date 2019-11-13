@@ -1,7 +1,7 @@
 package com.orzangleli.checkresourceprefix;
 
 public class EmailConfig {
-    boolean needSendEmail;
+    boolean needSendEmail = false;
     String host;
     String fromEmail;
     String[] toEmailList;
