@@ -1,0 +1,27 @@
+language: android
+jdk: oraclejdk8
+
+# 开启基于容器的Travis CI任务，让编译效率更高
+sudo: false
+
+
+android:
+  components:
+  # 构建项目所用的BuildTools版本
+  - build-tools-28.0.3
+  # 用来编译项目的SDK版本
+  - android-28
+
+  # 添加Android Support Repository组件
+  - extra-android-m2repository
+  # 添加Support Library组件
+  - extra-android-support
+
+
+before_script:
+- chmod +x gradlew
+
+
+script:
+# 生成release apk包
+- ./gradlew assembleRelease
