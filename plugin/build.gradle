@@ -1,6 +1,7 @@
 apply plugin: 'java-library'
 apply plugin: 'groovy'
 apply plugin: "maven"
+apply plugin: 'com.novoda.bintray-release'
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -33,20 +34,11 @@ processResources {
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
 
-//group和version
-group='com.orzangleli.checkresourceprefix'
-version='0.0.1-SNAPSHOT'
-
-//打包到本地或者远程Maven库
-uploadArchives {
-    repositories {
-        mavenDeployer {
-            //提交到远程服务器：
-            // repository(url: "http://www.xxx.com/repos") {
-            //    authentication(userName: "admin", password: "admin")
-            // }
-            //本地的Maven地址设置为E:/Maven
-            repository(url: uri('file://Users/LocalRepository'))
-        }
-    }
+publish {
+    userOrg = 'orzangleli'
+    groupId = 'com.orzangleli'
+    artifactId = 'checkresourceconflict'
+    publishVersion = '0.0.1'
+    desc = 'An Android Gradle Plugin For Checking Conflict Resources'
+    website = 'https://github.com/hust201010701/CheckResourceConflict'
 }

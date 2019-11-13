@@ -20,12 +20,29 @@ android {
 }
 
 checkResourceConfig {
-//    autoPreviewResult true
-    autoPreviewResult false
-//    outputDir "./out"
-//    whiteListFile "../checkResource/whitelist.lxc"
-    needSendEmail true
-    emailList ()
+    // 是否开启插件
+    enabled false
+    // 运行完后自动使用默认浏览器打开html结果进行预览
+    autoPreviewResult true
+    // 输出文档的目录
+    outputDir "./out"
+    // 资源冲突白名单
+    whiteListFile "../checkResource/whitelist.lxc"
+    // 邮件相关配置
+    emailConfig {
+        // 是否开启邮件发送功能
+        needSendEmail true
+        // 邮箱指定的 email host
+        host ""
+        // 发件人邮箱
+        fromEmail ""
+        // 收件人邮箱 支持多人
+        toEmailList ("", "")
+        // 邮箱账号
+        account ""
+        // 邮箱授权第三方客户端的授权码
+        authorizationCode ""
+    }
 }
 
 configurations.all {

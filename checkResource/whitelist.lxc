@@ -1,7 +1,7 @@
+# 「#」开头表示该行为注释
 # 这个文件可以声明检测资源冲突的白名单资源
-
 # 文件资源的格式为 file@文件所在文件夹名称/文件名， 如 file@layout/activity_main.xml
-
 # 值类型资源的格式为 value@资源所在文件的上层文件夹名称/资源名， 如 value@values/colorPrimary
-# value@values/error_color_material_dark
-# file@layout/notification_action_tombstone.xml
+
+value@values/error_color_material_dark
+file@layout/notification_action_tombstone.xml
