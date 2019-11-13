@@ -1,7 +1,7 @@
 [项目地址：https://github.com/hust201010701/CheckResourceConflict](https://github.com/hust201010701/CheckResourceConflict)
 
 [![Download](https://api.bintray.com/packages/orzangleli/maven/checkresourceconflict/images/download.svg)](https://bintray.com/orzangleli/maven/checkresourceconflict/_latestVersion)
-
+![build passing](https://api.travis-ci.org/hust201010701/CheckResourceConflict.svg?branch=master)
 ## 一、 引言
 
 在 Android 的日常开发中，我们会使用到大量的第三方库或者自己编写的组件库，这些依赖库中资源加上主工程本身的资源，可能会发生同名冲突，会发生资源相互覆盖的现象。
