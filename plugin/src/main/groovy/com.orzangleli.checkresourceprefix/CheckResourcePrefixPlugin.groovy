@@ -82,8 +82,11 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                 def thisTaskName = "checkResource${variant.name.capitalize()}"
                 def thisTask = project.task(thisTaskName)
                 thisTask.group = "check"
-                def compileReleaseJavaWithJavac = project.tasks.findByName("compile${variant.name.capitalize()}JavaWithJavac")
-                compileReleaseJavaWithJavac.dependsOn(thisTask)
+
+                if (checkResourceConfig.enabled) {
+                    def compileReleaseJavaWithJavac = project.tasks.findByName("compile${variant.name.capitalize()}JavaWithJavac")
+                    compileReleaseJavaWithJavac.dependsOn(thisTask)
+                }
 
                 thisTask.doLast {
                     long startTime = System.currentTimeMillis()

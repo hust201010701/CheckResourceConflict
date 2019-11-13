@@ -13,10 +13,15 @@ package com.orzangleli.checkresourceprefix;
  * <p>@version
  */
 public class CheckResourceConfig {
+    boolean enabled;
     boolean autoPreviewResult;
     String outputDir;
     String whiteListFile;
     EmailConfig emailConfig;
+    
+    void enabled(boolean enabled) {
+        this.enabled = enabled;
+    }
     
     void autoPreviewResult(boolean autoPreviewResult) {
         this.autoPreviewResult = autoPreviewResult;
