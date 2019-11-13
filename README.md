@@ -1,6 +1,6 @@
 [项目地址：https://github.com/hust201010701/CheckResourceConflict](https://github.com/hust201010701/CheckResourceConflict)
 
-[ ![Download](null/packages/orzangleli/maven/checkresourceconflict/images/download.svg?version=0.0.1) ](https://bintray.com/orzangleli/maven/checkresourceconflict/0.0.1/link)
+[![Download](https://api.bintray.com/packages/orzangleli/maven/checkresourceconflict/images/download.svg)](https://bintray.com/orzangleli/maven/checkresourceconflict/_latestVersion)
 
 ## 一、 引言
 
