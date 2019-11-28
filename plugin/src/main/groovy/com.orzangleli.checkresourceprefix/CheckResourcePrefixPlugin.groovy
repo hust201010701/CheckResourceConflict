@@ -382,9 +382,9 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
         resource.setFileName(file.name)
         resource.setMd5(MD5Util.getMD5(file))
         recordResource(resource)
-        if (resource.getUniqueId().contains("filter_qingxin_template.png")) {
-            println(resource.getUniqueId() + " = " + resource.path)
-        }
+//        if (resource.getUniqueId().contains("filter_qingxin_template.png")) {
+//            println(resource.getUniqueId() + " = " + resource.path)
+//        }
     }
 
     // 是否是值类型的资源
