@@ -1,6 +1,6 @@
 [项目地址：https://github.com/hust201010701/CheckResourceConflict](https://github.com/hust201010701/CheckResourceConflict)
 
-[![Download](https://api.bintray.com/packages/orzangleli/maven/checkresourceconflict/images/download.svg)](https://bintray.com/orzangleli/maven/checkresourceconflict/_latestVersion)
+ [ ![Download](https://api.bintray.com/packages/orzangleli/maven/checkresourceconflict/images/download.svg) ](https://bintray.com/orzangleli/maven/checkresourceconflict/_latestVersion)
 ![build passing](https://api.travis-ci.org/hust201010701/CheckResourceConflict.svg?branch=master)
 ## 一、 引言
 
@@ -94,7 +94,7 @@ buildscript {
         jcenter()
     }
     dependencies {
-        classpath 'com.orzangleli:checkresourceconflict:0.0.1'
+        classpath 'com.orzangleli:checkresourceconflict:0.0.2'
     }
 }
 ```
