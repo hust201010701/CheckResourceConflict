@@ -46,6 +46,13 @@ public class FileResource extends Resource {
     }
     
     public String getUniqueId() {
+        // 通过对比打包后的apk与源文件目录发现，如果以 drawable- 或 mipmap- 开头的文件夹没有携带 -v 之类的字符串，会被自动补充 -v4
+        if (lastDirectory != null
+            && (lastDirectory.startsWith("drawable-") || lastDirectory.startsWith("mipmap-"))
+            && !lastDirectory.contains("-v")
+        ) {
+            return "file@" + lastDirectory + "-v4/" + fileName;
+        }
         return "file@" + lastDirectory + "/" + fileName;
     }
     

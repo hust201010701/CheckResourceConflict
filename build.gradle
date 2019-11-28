@@ -3,6 +3,9 @@
 buildscript {
     repositories {
         maven {
+            url uri('file:///Users/LocalRepository')
+        }
+        maven {
             url 'https://maven.google.com'
         }
         maven {
@@ -22,6 +25,9 @@ buildscript {
 
 allprojects {
     repositories {
+        maven {
+            url uri('file:///Users/LocalRepository')
+        }
         maven {
             url 'https://maven.google.com'
         }

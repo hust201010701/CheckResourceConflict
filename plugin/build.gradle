@@ -1,7 +1,12 @@
 apply plugin: 'java-library'
 apply plugin: 'groovy'
 apply plugin: "maven"
-apply plugin: 'com.novoda.bintray-release'
+
+// 是否发布打 jcenter
+def JCENTER = true
+if (JCENTER) {
+    apply plugin: 'com.novoda.bintray-release'
+}
 
 dependencies {
     implementation fileTree(dir: 'libs', include: ['*.jar'])
@@ -34,11 +39,27 @@ processResources {
 sourceCompatibility = "1.7"
 targetCompatibility = "1.7"
 
-publish {
-    userOrg = 'orzangleli'
-    groupId = 'com.orzangleli'
-    artifactId = 'checkresourceconflict'
-    publishVersion = '0.0.1'
-    desc = 'An Android Gradle Plugin For Checking Conflict Resources'
-    website = 'https://github.com/hust201010701/CheckResourceConflict'
+if (JCENTER) {
+    publish {
+        userOrg = 'orzangleli'
+        groupId = 'com.orzangleli'
+        artifactId = 'checkresourceconflict'
+        publishVersion = '0.0.2'
+        desc = 'An Android Gradle Plugin For Checking Conflict Resources'
+        website = 'https://github.com/hust201010701/CheckResourceConflict'
+    }
+} else {
+    // 本地仓库
+    uploadArchives{
+        repositories.mavenDeployer{
+            // 本地仓库路径
+            repository(url: uri('file://Users/LocalRepository'))
+            // 唯一标识
+            pom.groupId = "com.orzangleli"
+            // 项目名称
+            pom.artifactId = "checkresourceconflict"
+            // 版本号
+            pom.version = "0.0.2-SNAPSHOT"
+        }
+    }
 }

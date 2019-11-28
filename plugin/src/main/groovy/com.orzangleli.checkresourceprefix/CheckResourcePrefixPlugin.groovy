@@ -182,11 +182,11 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
                     FileUtils.write(resultFile, template, Charset.forName("UTF-8"))
 
                     long cost = System.currentTimeMillis() - startTime
-                    println("资源冲突检查完毕，耗时 " + cost + " ms，请查看输出文件 $resultFile")
+                    println("资源冲突检查完毕，耗时 " + cost + " ms，请查看输出文件 $resultFile.absolutePath")
 
                     if (checkResourceConfig.autoPreviewResult) {
                         // 调用浏览器打开M页FileUtils
-                        UrlUtil.browse("file://$resultFile.path")
+                        UrlUtil.browse("file://$resultFile.absolutePath")
                     }
 
                     if (emailConfig.needSendEmail) {
@@ -382,6 +382,9 @@ class CheckResourcePrefixPlugin implements Plugin<Project> {
         resource.setFileName(file.name)
         resource.setMd5(MD5Util.getMD5(file))
         recordResource(resource)
+        if (resource.getUniqueId().contains("filter_qingxin_template.png")) {
+            println(resource.getUniqueId() + " = " + resource.path)
+        }
     }
 
     // 是否是值类型的资源
